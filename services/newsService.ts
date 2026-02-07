@@ -23,17 +23,32 @@ export const fetchNews = async (): Promise<NewsItem[]> => {
     }
     
     const newsItems: NewsItem[] = items.map((item: any) => {
-      // Extraction Logic
-      let imageUrl = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=1000&auto=format&fit=crop'; // Default News Generic
-      
-      // Try to find image in description
-      const imgMatch = item.description?.match(/src="([^"]+)"/);
-      if (imgMatch && imgMatch[1]) {
-         imageUrl = imgMatch[1];
+      // Dynamic image: try multiple RSS sources so each article gets its own image
+      let imageUrl = '';
+      // 1. Enclosure (common in RSS 2.0)
+      const enclosure = item.enclosure;
+      if (enclosure && (enclosure['@_url'] || enclosure.url)) {
+        const url = enclosure['@_url'] ?? enclosure.url;
+        const type = (enclosure['@_type'] ?? enclosure.type) || '';
+        if (url && (type.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp)/i.test(url))) {
+          imageUrl = url;
+        }
       }
-
-      // If title contains specific keywords, maybe use specific placeholders? 
-      // (Optional, just sticking to extracted or default for now to keep it clean)
+      // 2. media:content (Media RSS)
+      const mediaContent = item['media:content'] ?? item.media?.content;
+      const mediaUrl = Array.isArray(mediaContent) ? mediaContent[0] : mediaContent;
+      if (!imageUrl && mediaUrl && (mediaUrl['@_url'] || mediaUrl.url)) {
+        imageUrl = mediaUrl['@_url'] ?? mediaUrl.url;
+      }
+      // 3. Image in description (e.g. Google News HTML)
+      if (!imageUrl && item.description) {
+        const imgMatch = item.description.match(/<img[^>]+src="([^"]+)"/);
+        if (imgMatch && imgMatch[1]) imageUrl = imgMatch[1];
+      }
+      // 4. Fallback: neutral news placeholder (per-article fallback)
+      if (!imageUrl || !imageUrl.startsWith('http')) {
+        imageUrl = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1000&auto=format&fit=crop';
+      }
 
       // Clean description
       // Google News description is usually HTML with links. We want plain text for the summary.

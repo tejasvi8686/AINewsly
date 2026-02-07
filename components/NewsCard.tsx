@@ -27,12 +27,16 @@ const { width, height } = Dimensions.get('window');
 interface NewsCardProps {
     item: NewsItem;
     isActive: boolean; // to trigger summary only when active
+    isSaved?: boolean;
+    onSave?: (item: NewsItem) => void;
+    isLiked?: boolean;
+    onLike?: (item: NewsItem) => void;
+    onOpenLink?: (url: string) => void;
 }
 
-export default function NewsCard({ item, isActive }: NewsCardProps) {
+export default function NewsCard({ item, isActive, isSaved = false, onSave, isLiked = false, onLike, onOpenLink }: NewsCardProps) {
     const [summary, setSummary] = useState<string | null>(null);
     const [loadingSummary, setLoadingSummary] = useState(false);
-    const [liked, setLiked] = useState(false);
 
     // Animation values
     const scale = useSharedValue(1);
@@ -48,12 +52,14 @@ export default function NewsCard({ item, isActive }: NewsCardProps) {
     }, [isActive, item, summary]);
 
     const handleLike = () => {
-        setLiked(!liked);
+        onLike?.(item);
         scale.value = withSequence(
             withSpring(1.2),
             withSpring(1)
         );
     };
+
+    const liked = isLiked;
 
     const likeStyle = useAnimatedStyle(() => {
         return {
@@ -72,14 +78,16 @@ export default function NewsCard({ item, isActive }: NewsCardProps) {
     };
 
     const openLink = () => {
-        if (item.url) Linking.openURL(item.url);
+        if (!item.url) return;
+        if (onOpenLink) onOpenLink(item.url);
+        else Linking.openURL(item.url);
     };
 
     return (
         <View style={styles.container}>
-            {/* Background Image */}
+            {/* Background Image - dynamic per article from RSS */}
             <Image
-                source={{ uri: item.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1000' }}
+                source={{ uri: item.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1000&auto=format&fit=crop' }}
                 style={styles.image}
                 resizeMode="cover"
             />
@@ -107,8 +115,12 @@ export default function NewsCard({ item, isActive }: NewsCardProps) {
                 </Pressable>
 
                 <View style={styles.summaryContainer}>
+                    <View style={styles.summaryLabelRow}>
+                        <Ionicons name="sparkles" size={14} color="rgba(255,255,255,0.7)" />
+                        <Text style={styles.summaryLabel}>AI Summary</Text>
+                    </View>
                     {loadingSummary ? (
-                        <ActivityIndicator size="small" color="#aaa" style={{ alignSelf: 'flex-start' }} />
+                        <ActivityIndicator size="small" color="#aaa" style={{ alignSelf: 'flex-start', marginTop: 6 }} />
                     ) : (
                         <Text style={styles.description} numberOfLines={6}>
                             {summary || item.description}
@@ -130,9 +142,9 @@ export default function NewsCard({ item, isActive }: NewsCardProps) {
                         <Text style={styles.actionText}>Share</Text>
                     </Pressable>
 
-                    <Pressable onPress={() => { }} style={styles.actionButton}>
-                        <Ionicons name="bookmark-outline" size={30} color="white" />
-                        <Text style={styles.actionText}>Save</Text>
+                    <Pressable onPress={() => onSave?.(item)} style={styles.actionButton}>
+                        <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={30} color={isSaved ? "#007AFF" : "white"} />
+                        <Text style={[styles.actionText, isSaved && styles.actionTextSaved]}>{isSaved ? "Saved" : "Save"}</Text>
                     </Pressable>
                 </View>
 
@@ -197,10 +209,22 @@ const styles = StyleSheet.create({
     },
     summaryContainer: {
         minHeight: 80,
-        marginBottom: 20,
+        marginBottom: 16,
+    },
+    summaryLabelRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginBottom: 6,
+    },
+    summaryLabel: {
+        color: 'rgba(255,255,255,0.7)',
+        fontSize: 12,
+        fontWeight: '600',
+        letterSpacing: 0.4,
     },
     description: {
-        color: '#eee',
+        color: 'rgba(255,255,255,0.9)',
         fontSize: 15,
         lineHeight: 22,
         fontWeight: '400',
@@ -219,6 +243,9 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 10,
         marginTop: 4,
+    },
+    actionTextSaved: {
+        color: '#007AFF',
     },
     swipeHint: {
         textAlign: 'center',
