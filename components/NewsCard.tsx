@@ -15,12 +15,7 @@ import { NewsItem } from '../types';
 import { summarizeNews } from '../services/newsService';
 import { formatDistanceToNow } from 'date-fns';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, {
-    useSharedValue,
-    useAnimatedStyle,
-    withSpring,
-    withSequence
-} from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 
@@ -37,35 +32,17 @@ interface NewsCardProps {
 export default function NewsCard({ item, isActive, isSaved = false, onSave, isLiked = false, onLike, onOpenLink }: NewsCardProps) {
     const [summary, setSummary] = useState<string | null>(null);
     const [loadingSummary, setLoadingSummary] = useState(false);
-
-    // Animation values
-    const scale = useSharedValue(1);
+    const insets = useSafeAreaInsets();
 
     useEffect(() => {
         if (isActive && !summary) {
             setLoadingSummary(true);
-            summarizeNews(item.description || item.title) // RSS description can be short, so fallback to title
+            summarizeNews(item.description || item.title)
                 .then(res => setSummary(res))
                 .catch(err => console.error(err))
                 .finally(() => setLoadingSummary(false));
         }
     }, [isActive, item, summary]);
-
-    const handleLike = () => {
-        onLike?.(item);
-        scale.value = withSequence(
-            withSpring(1.2),
-            withSpring(1)
-        );
-    };
-
-    const liked = isLiked;
-
-    const likeStyle = useAnimatedStyle(() => {
-        return {
-            transform: [{ scale: scale.value }],
-        };
-    });
 
     const handleShare = async () => {
         try {
@@ -85,7 +62,7 @@ export default function NewsCard({ item, isActive, isSaved = false, onSave, isLi
 
     return (
         <View style={styles.container}>
-            {/* Background Image - dynamic per article from RSS */}
+            {/* Background Image */}
             <Image
                 source={{ uri: item.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1000&auto=format&fit=crop' }}
                 style={styles.image}
@@ -94,9 +71,17 @@ export default function NewsCard({ item, isActive, isSaved = false, onSave, isLi
 
             {/* Gradient Overlay */}
             <LinearGradient
-                colors={['transparent', 'rgba(0,0,0,0.4)', 'rgba(0,0,0,0.95)']}
+                colors={['transparent', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.95)']}
                 style={styles.gradient}
             />
+
+            {/* Top Right Share Button */}
+            <Pressable 
+                onPress={handleShare} 
+                style={[styles.shareButton, { top: insets.top + 16 }]}
+            >
+                <Ionicons name="share-outline" size={24} color="#fff" />
+            </Pressable>
 
             {/* Content */}
             <View style={styles.content}>
@@ -128,26 +113,6 @@ export default function NewsCard({ item, isActive, isSaved = false, onSave, isLi
                     )}
                 </View>
 
-                {/* Action Buttons */}
-                <View style={styles.actions}>
-                    <Pressable onPress={handleLike} style={styles.actionButton}>
-                        <Animated.View style={likeStyle}>
-                            <Ionicons name={liked ? "heart" : "heart-outline"} size={32} color={liked ? "#ff4040" : "white"} />
-                        </Animated.View>
-                        <Text style={styles.actionText}>{liked ? "Liked" : "Like"}</Text>
-                    </Pressable>
-
-                    <Pressable onPress={handleShare} style={styles.actionButton}>
-                        <Ionicons name="share-social-outline" size={30} color="white" />
-                        <Text style={styles.actionText}>Share</Text>
-                    </Pressable>
-
-                    <Pressable onPress={() => onSave?.(item)} style={styles.actionButton}>
-                        <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={30} color={isSaved ? "#fff" : "rgba(255,255,255,0.8)"} />
-                        <Text style={[styles.actionText, isSaved && styles.actionTextSaved]}>{isSaved ? "Saved" : "Save"}</Text>
-                    </Pressable>
-                </View>
-
                 <Text style={styles.swipeHint}>Swipe for next news</Text>
             </View>
         </View>
@@ -168,11 +133,24 @@ const styles = StyleSheet.create({
     },
     gradient: {
         ...StyleSheet.absoluteFillObject,
-        top: '30%', // start gradient lower
+        top: '30%',
+    },
+    shareButton: {
+        position: 'absolute',
+        right: 20,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
+        zIndex: 20,
     },
     content: {
         paddingHorizontal: 20,
-        paddingBottom: 40, // Space for bottom safe area/nav
+        paddingBottom: 130, // Increased to clear floating tab bar
         justifyContent: 'flex-end',
         flex: 1,
     },
@@ -202,7 +180,7 @@ const styles = StyleSheet.create({
     title: {
         color: '#fff',
         fontSize: 24,
-        fontWeight: '800', // Heavy bold
+        fontWeight: '800',
         marginBottom: 12,
         lineHeight: 32,
         textShadowColor: 'rgba(0,0,0,0.8)',
@@ -230,24 +208,6 @@ const styles = StyleSheet.create({
         fontSize: 15,
         lineHeight: 22,
         fontWeight: '400',
-    },
-    actions: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 26,
-        paddingHorizontal: 10,
-    },
-    actionButton: {
-        alignItems: 'center',
-        gap: 4
-    },
-    actionText: {
-        color: '#fff',
-        fontSize: 10,
-        marginTop: 4,
-    },
-    actionTextSaved: {
-        color: '#fff',
     },
     swipeHint: {
         textAlign: 'center',
