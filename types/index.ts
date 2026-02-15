@@ -6,4 +6,8 @@ export interface NewsItem {
   source: string;
   publishedAt: string;
   url: string;
+  // New fields from API
+  summary?: string;
+  whyItMatters?: string;
+  content?: string;
 }

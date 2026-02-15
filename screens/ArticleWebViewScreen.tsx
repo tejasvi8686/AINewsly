@@ -69,10 +69,6 @@ export default function ArticleWebViewScreen({ url, onClose }: ArticleWebViewScr
                                 <Ionicons name="close" size={28} color="#fff" />
                                 <Text style={styles.closeText}>Close</Text>
                             </Pressable>
-                            <Pressable onPress={openInBrowser} style={styles.openBrowserButton} hitSlop={12}>
-                                <Ionicons name="open-outline" size={22} color="#fff" />
-                                <Text style={styles.openBrowserText}>{openInBrowserLabel}</Text>
-                            </Pressable>
                         </View>
                     </SafeAreaView>
 

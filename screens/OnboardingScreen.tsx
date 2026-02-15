@@ -25,6 +25,9 @@ import Animated, {
     Easing,
     ZoomIn,
     FadeIn,
+    interpolateColor,
+    withSequence,
+    withDelay,
 } from 'react-native-reanimated';
 
 const { width, height } = Dimensions.get('window');
@@ -58,6 +61,14 @@ const SLIDES = [
         icon: 'reader' as const,
         description: 'Immersive reading mode designed for deep work. No ads, no clutter, just the story.',
         color: '#111827', // Deep Gray/Black
+    },
+    {
+        id: '4',
+        title: 'MASTER THE FEED',
+        subtitle: 'Gestures',
+        icon: 'finger-print' as const, // Placeholder
+        description: 'Swipe Right to Save. Swipe Left to Like. It’s that simple.',
+        color: '#000000', // Deep Black
     },
 ];
 
@@ -175,7 +186,6 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
 }
 
 function Background({ scrollX }: { scrollX: SharedValue<number> }) {
-    // We render multiple absolute positioned views that fade in/out
     return (
         <View style={StyleSheet.absoluteFillObject}>
             {SLIDES.map((slide, index) => {
@@ -227,7 +237,7 @@ function Card({ item, index, scrollX }: { item: typeof SLIDES[0], index: number,
         const scale = interpolate(
             scrollX.value,
             inputRange,
-            [0.92, 1, 0.92],
+            [0.9, 1, 0.9],
             Extrapolation.CLAMP
         );
 
@@ -238,9 +248,27 @@ function Card({ item, index, scrollX }: { item: typeof SLIDES[0], index: number,
             Extrapolation.CLAMP
         );
         
+        const rotateY = interpolate(
+            scrollX.value,
+            inputRange,
+            [15, 0, -15],
+            Extrapolation.CLAMP
+        );
+
+        const borderColor = interpolateColor(
+            scrollX.value,
+            inputRange,
+            ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.8)', 'rgba(255,255,255,0.1)']
+        );
+        
         return {
-            transform: [{ scale }],
+            transform: [
+                { perspective: 1000 },
+                { scale },
+                { rotateY: `${rotateY}deg` },
+            ],
             opacity,
+            borderColor,
         };
     });
 
@@ -255,7 +283,7 @@ function Card({ item, index, scrollX }: { item: typeof SLIDES[0], index: number,
         const translateX = interpolate(
             scrollX.value,
             inputRange,
-            [40, 0, -40], // Move content slightly opposite to scroll
+            [50, 0, -50],
             Extrapolation.CLAMP
         );
         
@@ -264,20 +292,107 @@ function Card({ item, index, scrollX }: { item: typeof SLIDES[0], index: number,
         };
     });
 
+    const textRevealStyle = useAnimatedStyle(() => {
+        const inputRange = [
+            (index - 0.5) * ITEM_SIZE,
+            index * ITEM_SIZE,
+            (index + 0.5) * ITEM_SIZE,
+        ];
+
+        const translateY = interpolate(
+            scrollX.value,
+            inputRange,
+            [20, 0, 20],
+            Extrapolation.CLAMP
+        );
+
+        const opacity = interpolate(
+            scrollX.value,
+            inputRange,
+            [0, 1, 0],
+            Extrapolation.CLAMP
+        );
+
+        return {
+            transform: [{ translateY }],
+            opacity,
+        };
+    });
+
     return (
         <View style={{ width: ITEM_SIZE }}>
             <Animated.View style={[styles.cardContainer, animatedStyle]}>
                 <Animated.View style={[styles.innerContent, parallaxStyle]}>
                     <View style={styles.iconContainer}>
-                        <Ionicons name={item.icon} size={64} color="#fff" />
+                        {item.id === '4' ? (
+                            <GestureDemo />
+                        ) : (
+                            <Ionicons name={item.icon} size={64} color="#fff" />
+                        )}
                     </View>
-                    <View style={styles.textContainer}>
+                    <Animated.View style={[styles.textContainer, textRevealStyle]}>
                         <Text style={styles.subtitle}>{item.subtitle}</Text>
                         <View style={styles.separator} />
                         <Text style={styles.title}>{item.title}</Text>
                         <Text style={styles.description}>{item.description}</Text>
-                    </View>
+                    </Animated.View>
                 </Animated.View>
+            </Animated.View>
+        </View>
+    );
+}
+
+function GestureDemo() {
+    const handX = useSharedValue(0);
+    const likeScale = useSharedValue(1);
+    const saveScale = useSharedValue(1);
+
+    useEffect(() => {
+        const duration = 1500;
+        handX.value = withRepeat(
+            withSequence(
+                withTiming(40, { duration, easing: Easing.inOut(Easing.quad) }), // Right (Like)
+                withTiming(0, { duration: duration / 2, easing: Easing.inOut(Easing.quad) }),
+                withTiming(-40, { duration, easing: Easing.inOut(Easing.quad) }), // Left (Save)
+                withTiming(0, { duration: duration / 2, easing: Easing.inOut(Easing.quad) })
+            ),
+            -1,
+            false
+        );
+        
+        // Pulse icons when hand reaches them
+        likeScale.value = withRepeat(withSequence(withDelay(duration * 0.8, withTiming(1.5, { duration: 300 })), withTiming(1)), -1);
+        saveScale.value = withRepeat(withSequence(withDelay(duration * 2.3, withTiming(1.5, { duration: 300 })), withTiming(1)), -1);
+    }, []);
+
+    const handStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: handX.value }, { rotate: '-15deg' }]
+    }));
+
+    const likeIconStyle = useAnimatedStyle(() => {
+        const opacity = interpolate(handX.value, [10, 40], [0.3, 1], Extrapolation.CLAMP);
+        const scale = interpolate(handX.value, [10, 40], [0.8, 1.2], Extrapolation.CLAMP);
+        return { opacity, transform: [{ scale }] };
+    });
+
+    const saveIconStyle = useAnimatedStyle(() => {
+        const opacity = interpolate(handX.value, [-40, -10], [1, 0.3], Extrapolation.CLAMP);
+        const scale = interpolate(handX.value, [-40, -10], [1.2, 0.8], Extrapolation.CLAMP);
+        return { opacity, transform: [{ scale }] };
+    });
+
+    return (
+        <View style={styles.gestureContainer}>
+            <Animated.View style={[styles.gestureIcon, styles.gestureRight, likeIconStyle]}>
+                <Ionicons name="bookmark" size={24} color="#fff" />
+            </Animated.View>
+            
+            <Animated.View style={[styles.gestureIcon, styles.gestureLeft, saveIconStyle]}>
+                <Ionicons name="heart" size={24} color="#ff4040" />
+            </Animated.View>
+
+            <Animated.View style={handStyle}>
+                <Ionicons name="hand-right" size={48} color="#fff" />
             </Animated.View>
         </View>
     );
@@ -428,8 +543,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.5,
         shadowRadius: 24,
         elevation: 12,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.15)',
         marginRight: SPACING,
         overflow: 'hidden',
     },
@@ -445,8 +558,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 36,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.2)',
     },
     textContainer: {
         alignItems: 'center',
@@ -538,5 +649,20 @@ const styles = StyleSheet.create({
         fontWeight: '800',
         letterSpacing: 1.5,
         textTransform: 'uppercase',
+    },
+    gestureContainer: {
+        width: '100%',
+        height: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    gestureIcon: {
+        position: 'absolute',
+    },
+    gestureRight: {
+        right: 10,
+    },
+    gestureLeft: {
+        left: 10,
     },
 });

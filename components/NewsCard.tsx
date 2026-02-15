@@ -35,7 +35,7 @@ export default function NewsCard({ item, isActive, isSaved = false, onSave, isLi
     const insets = useSafeAreaInsets();
 
     useEffect(() => {
-        if (isActive && !summary) {
+        if (isActive && !item.summary && !summary) {
             setLoadingSummary(true);
             summarizeNews(item.description || item.title)
                 .then(res => setSummary(res))
@@ -61,7 +61,7 @@ export default function NewsCard({ item, isActive, isSaved = false, onSave, isLi
     };
 
     return (
-        <View style={styles.container}>
+        <Pressable onPress={openLink} style={styles.container}>
             {/* Background Image */}
             <Image
                 source={{ uri: item.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1000&auto=format&fit=crop' }}
@@ -79,6 +79,7 @@ export default function NewsCard({ item, isActive, isSaved = false, onSave, isLi
             <Pressable 
                 onPress={handleShare} 
                 style={[styles.shareButton, { top: insets.top + 16 }]}
+                hitSlop={10}
             >
                 <Ionicons name="share-outline" size={24} color="#fff" />
             </Pressable>
@@ -95,27 +96,39 @@ export default function NewsCard({ item, isActive, isSaved = false, onSave, isLi
                     </Text>
                 </View>
 
-                <Pressable onPress={openLink}>
-                    <Text style={styles.title} numberOfLines={3}>{item.title}</Text>
-                </Pressable>
+                <Text style={styles.title} numberOfLines={3}>{item.title}</Text>
 
                 <View style={styles.summaryContainer}>
+                    {/* AI Summary */}
                     <View style={styles.summaryLabelRow}>
-                        <Ionicons name="sparkles" size={14} color="rgba(255,255,255,0.7)" />
-                        <Text style={styles.summaryLabel}>AI Summary</Text>
+                        <Ionicons name="sparkles" size={14} color="#c084fc" />
+                        <Text style={[styles.summaryLabel, { color: '#c084fc' }]}>AI Summary</Text>
                     </View>
                     {loadingSummary ? (
                         <ActivityIndicator size="small" color="rgba(255,255,255,0.6)" style={{ alignSelf: 'flex-start', marginTop: 6 }} />
                     ) : (
-                        <Text style={styles.description} numberOfLines={6}>
-                            {summary || item.description}
+                        <Text style={styles.description} numberOfLines={item.whyItMatters ? 4 : 6}>
+                            {item.summary || summary || item.description}
                         </Text>
+                    )}
+
+                    {/* Why It Matters (New Section) */}
+                    {item.whyItMatters && (
+                        <View style={{ marginTop: 12 }}>
+                            <View style={styles.summaryLabelRow}>
+                                <Ionicons name="bulb" size={14} color="#fbbf24" />
+                                <Text style={[styles.summaryLabel, { color: '#fbbf24' }]}>Why It Matters</Text>
+                            </View>
+                            <Text style={styles.description} numberOfLines={3}>
+                                {item.whyItMatters}
+                            </Text>
+                        </View>
                     )}
                 </View>
 
                 <Text style={styles.swipeHint}>Swipe for next news</Text>
             </View>
-        </View>
+        </Pressable>
     );
 }
 

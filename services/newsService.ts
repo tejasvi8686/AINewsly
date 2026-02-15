@@ -1,95 +1,48 @@
-import { XMLParser } from 'fast-xml-parser';
 import { NewsItem } from '../types';
 
-const RSS_URL = 'https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en';
+const API_URL = 'https://task-habit-tracker-lyart.vercel.app/api/news';
 
-export const fetchNews = async (): Promise<NewsItem[]> => {
+export const fetchNews = async (page: number = 1): Promise<NewsItem[]> => {
   try {
-    const response = await fetch(RSS_URL);
-    const xml = await response.text();
-    const parser = new XMLParser({
-      ignoreAttributes: false,
-      attributeNamePrefix: "@_"
-    });
-    const jsonObj = parser.parse(xml);
-    
-    const channelItems = jsonObj?.rss?.channel?.item;
-    let items: any[] = [];
-    
-    if (Array.isArray(channelItems)) {
-      items = channelItems;
-    } else if (channelItems) {
-      items = [channelItems];
-    }
-    
-    const newsItems: NewsItem[] = items.map((item: any) => {
-      // Dynamic image: try multiple RSS sources so each article gets its own image
-      let imageUrl = '';
-      // 1. Enclosure (common in RSS 2.0)
-      const enclosure = item.enclosure;
-      if (enclosure && (enclosure['@_url'] || enclosure.url)) {
-        const url = enclosure['@_url'] ?? enclosure.url;
-        const type = (enclosure['@_type'] ?? enclosure.type) || '';
-        if (url && (type.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp)/i.test(url))) {
-          imageUrl = url;
-        }
-      }
-      // 2. media:content (Media RSS)
-      const mediaContent = item['media:content'] ?? item.media?.content;
-      const mediaUrl = Array.isArray(mediaContent) ? mediaContent[0] : mediaContent;
-      if (!imageUrl && mediaUrl && (mediaUrl['@_url'] || mediaUrl.url)) {
-        imageUrl = mediaUrl['@_url'] ?? mediaUrl.url;
-      }
-      // 3. Image in description (e.g. Google News HTML)
-      if (!imageUrl && item.description) {
-        const imgMatch = item.description.match(/<img[^>]+src="([^"]+)"/);
-        if (imgMatch && imgMatch[1]) imageUrl = imgMatch[1];
-      }
-      // 4. Fallback: neutral news placeholder (per-article fallback)
-      if (!imageUrl || !imageUrl.startsWith('http')) {
-        imageUrl = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1000&auto=format&fit=crop';
-      }
+    const response = await fetch(`${API_URL}?page=${page}`);
+    const data = await response.json();
 
-      // Clean description
-      // Google News description is usually HTML with links. We want plain text for the summary.
-      // Remove HTML tags
-      let cleanDesc = item.description?.replace(/<[^>]+>/g, '').trim() || '';
-      // Remove "View Full coverage" etc which Google adds
-      cleanDesc = cleanDesc.replace(/View Full coverage on Google News/g, '');
+    console.log('data', data);
+    // Ensure we have an array
+    const items = Array.isArray(data) ? data : (data.news || []);
 
-      return {
-        id: item.guid?.['#text'] || item.link || Math.random().toString(),
-        title: item.title,
-        description: cleanDesc,
-        image: imageUrl,
-        source: item.source?.['#text'] || 'Google News',
-        publishedAt: item.pubDate,
-        url: item.link
-      };
-    }).filter((i: NewsItem) => i.title); // Filter empty
-
-    return newsItems;
+    return items.map((item: any) => ({
+      id: item._id?.$oid || item._id || Math.random().toString(),
+      title: item.title,
+      description: item.content, // Using content as full text
+      summary: item.summary,
+      whyItMatters: item.whyItMatters,
+      image: item.imageUrl,
+      source: item.sourceUrl ? getHostname(item.sourceUrl) : 'Unknown',
+      publishedAt: item.createdAt?.$date || new Date().toISOString(),
+      url: item.sourceUrl
+    }));
   } catch (error) {
     console.error('Error fetching news:', error);
     return [];
   }
 };
 
+const getHostname = (url: string) => {
+  try {
+    return new URL(url).hostname.replace('www.', '');
+  } catch (e) {
+    return 'Source';
+  }
+};
+
 export const summarizeNews = async (text: string): Promise<string> => {
-  // SIMULATED AI SUMMARIZER
-  // In a real production app, this would call an endpoint like OpenAI API.
-  // Example:
-  // const res = await fetch('https://api.openai.com/v1/...', { body: JSON.stringify({ prompt: `Summarize: ${text}` }) ... });
+  // If text is already a summary (short), just return it
+  if (text.length < 500) return text;
   
   return new Promise((resolve) => {
-    // Simulate network delay
     setTimeout(() => {
-      // formatting the summary
-      const dummySummary = text.length > 100 
-        ? text.substring(0, 100) + '... (Read more)' 
-        : text;
-        
-      resolve(`🤖 AI Summary:\n\nThis article covers the latest updates regarding "${text.substring(0, 20)}...". \n\nKey points:\n• Update 1: Significant event occurred.\n• Update 2: Impact on the sector.\n\n(Simulated for Demo)`);
-    }, 1200);
+      resolve(`AI Summary:\n\n${text.substring(0, 150)}...`);
+    }, 1000);
   });
 };

@@ -6,37 +6,52 @@ export const useNews = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  const loadNews = useCallback(async () => {
+  const loadNews = async (pageNum: number, shouldRefresh = false) => {
     try {
-      // Don't set loading true on refresh to keep list visible
-      if (!refreshing) setLoading(true);
-      const data = await fetchNews();
-      setNews(data);
+      if (pageNum === 1) {
+        if (!shouldRefresh) setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const data = await fetchNews(pageNum);
+      
+      if (data.length === 0) {
+        setHasMore(false);
+      } else {
+        setNews(prev => shouldRefresh ? data : [...prev, ...data]);
+      }
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
     }
-  }, [refreshing]);
+  };
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    // We intentionally don't await here to let the state update trigger the effect or logic if needed, 
-    // but actually calling loadNews directly is better.
-    // However, since loadNews uses `refreshing` state in its logic (above), 
-    // we need to be careful. usage of startTransition or just calling fetchNews directly is simpler.
-    // Let's fix the circular dependency/logic.
-    fetchNews().then((data) => {
-        setNews(data);
-        setRefreshing(false);
-    });
+    setHasMore(true);
+    setPage(1);
+    loadNews(1, true);
   }, []);
+
+  const onLoadMore = useCallback(() => {
+    if (!loading && !loadingMore && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      loadNews(nextPage);
+    }
+  }, [loading, loadingMore, hasMore, page]);
 
   useEffect(() => {
-    loadNews();
+    loadNews(1);
   }, []);
 
-  return { news, loading, refreshing, onRefresh };
+  return { news, loading, refreshing, onRefresh, onLoadMore, hasMore, loadingMore };
 };
