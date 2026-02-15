@@ -129,7 +129,7 @@ export default function SavedLikedTabScreen({
                         <Ionicons
                             name={tabIndex === 1 ? 'bookmark' : 'bookmark-outline'}
                             size={20}
-                            color={tabIndex === 1 ? '#007AFF' : 'rgba(255,255,255,0.5)'}
+                            color={tabIndex === 1 ? '#fff' : 'rgba(255,255,255,0.5)'}
                         />
                         <Text style={[styles.tabLabel, tabIndex === 1 && styles.tabLabelActive]}>
                             Saved
@@ -150,9 +150,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#000',
     },
     tabWrapper: {
-        backgroundColor: '#0a0a0a',
+        backgroundColor: '#000',
         borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.08)',
+        borderBottomColor: 'rgba(255,255,255,0.12)',
     },
     tabBar: {
         flexDirection: 'row',
@@ -170,7 +170,9 @@ const styles = StyleSheet.create({
         borderRadius: 12,
     },
     tabActive: {
-        backgroundColor: 'rgba(255,255,255,0.1)',
+        backgroundColor: 'rgba(255,255,255,0.08)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
     },
     tabLabel: {
         color: 'rgba(255,255,255,0.5)',
@@ -188,10 +190,10 @@ const styles = StyleSheet.create({
         paddingBottom: height * 0.1,
     },
     sectionTitle: {
-        color: 'rgba(255,255,255,0.5)',
-        fontSize: 13,
+        color: 'rgba(255,255,255,0.7)',
+        fontSize: 12,
         fontWeight: '600',
-        letterSpacing: 0.5,
+        letterSpacing: 1,
         marginBottom: 12,
         marginHorizontal: 16,
     },

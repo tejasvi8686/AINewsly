@@ -120,7 +120,7 @@ export default function NewsCard({ item, isActive, isSaved = false, onSave, isLi
                         <Text style={styles.summaryLabel}>AI Summary</Text>
                     </View>
                     {loadingSummary ? (
-                        <ActivityIndicator size="small" color="#aaa" style={{ alignSelf: 'flex-start', marginTop: 6 }} />
+                        <ActivityIndicator size="small" color="rgba(255,255,255,0.6)" style={{ alignSelf: 'flex-start', marginTop: 6 }} />
                     ) : (
                         <Text style={styles.description} numberOfLines={6}>
                             {summary || item.description}
@@ -143,7 +143,7 @@ export default function NewsCard({ item, isActive, isSaved = false, onSave, isLi
                     </Pressable>
 
                     <Pressable onPress={() => onSave?.(item)} style={styles.actionButton}>
-                        <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={30} color={isSaved ? "#007AFF" : "white"} />
+                        <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={30} color={isSaved ? "#fff" : "rgba(255,255,255,0.8)"} />
                         <Text style={[styles.actionText, isSaved && styles.actionTextSaved]}>{isSaved ? "Saved" : "Save"}</Text>
                     </Pressable>
                 </View>
@@ -182,10 +182,12 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     sourceTag: {
-        backgroundColor: '#007AFF', // Blue accent
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.5)',
         paddingHorizontal: 10,
         paddingVertical: 4,
-        borderRadius: 8,
+        borderRadius: 6,
         marginRight: 10,
     },
     sourceText: {
@@ -245,7 +247,7 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     actionTextSaved: {
-        color: '#007AFF',
+        color: '#fff',
     },
     swipeHint: {
         textAlign: 'center',

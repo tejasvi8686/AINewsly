@@ -66,7 +66,7 @@ export default function NewsFeedScreen({ isLiked: isLikedProp, onLike: onLikePro
         return (
             <View style={styles.centerContainer}>
                 <StatusBar style="light" />
-                <ActivityIndicator size="large" color="#007AFF" />
+                <ActivityIndicator size="large" color="#fff" />
                 <Text style={styles.loadingText}>Fetching Latest News...</Text>
             </View>
         );
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
         fontWeight: '500'
     },
     errorText: {
-        color: '#aaa',
+        color: 'rgba(255,255,255,0.7)',
         fontSize: 18
     }
 });

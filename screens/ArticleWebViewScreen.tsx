@@ -62,15 +62,15 @@ export default function ArticleWebViewScreen({ url, onClose }: ArticleWebViewScr
         >
             <SafeAreaProvider>
                 <View style={styles.container}>
-                    <StatusBar barStyle="dark-content" />
+                    <StatusBar barStyle="light-content" />
                     <SafeAreaView edges={['top']} style={styles.headerWrapper}>
                         <View style={styles.header}>
                             <Pressable onPress={onClose} style={styles.closeButton} hitSlop={12}>
-                                <Ionicons name="close" size={28} color="#000" />
+                                <Ionicons name="close" size={28} color="#fff" />
                                 <Text style={styles.closeText}>Close</Text>
                             </Pressable>
                             <Pressable onPress={openInBrowser} style={styles.openBrowserButton} hitSlop={12}>
-                                <Ionicons name="open-outline" size={22} color="#007AFF" />
+                                <Ionicons name="open-outline" size={22} color="#fff" />
                                 <Text style={styles.openBrowserText}>{openInBrowserLabel}</Text>
                             </Pressable>
                         </View>
@@ -86,14 +86,14 @@ export default function ArticleWebViewScreen({ url, onClose }: ArticleWebViewScr
                             </View>
                         ) : !showWebView ? (
                             <View style={styles.loadingOverlay}>
-                                <ActivityIndicator size="large" color="#007AFF" />
+                                <ActivityIndicator size="large" color="#fff" />
                                 <Text style={styles.loadingText}>Loading…</Text>
                             </View>
                         ) : (
                             <>
                                 {loading && (
                                     <View style={styles.loadingOverlay} pointerEvents="none">
-                                        <ActivityIndicator size="large" color="#007AFF" />
+                                        <ActivityIndicator size="large" color="#fff" />
                                         <Text style={styles.loadingText}>Loading…</Text>
                                     </View>
                                 )}
@@ -132,12 +132,12 @@ export default function ArticleWebViewScreen({ url, onClose }: ArticleWebViewScr
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#000',
     },
     headerWrapper: {
-        backgroundColor: '#fff',
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: '#ccc',
+        backgroundColor: '#000',
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255,255,255,0.12)',
     },
     header: {
         flexDirection: 'row',
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     },
     closeText: {
         fontSize: 17,
-        color: '#007AFF',
+        color: '#fff',
         fontWeight: '500',
     },
     openBrowserButton: {
@@ -163,12 +163,12 @@ const styles = StyleSheet.create({
     },
     openBrowserText: {
         fontSize: 15,
-        color: '#007AFF',
+        color: '#fff',
         fontWeight: '500',
     },
     webviewContainer: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#fff',
     },
     webview: {
         flex: 1,
@@ -176,36 +176,36 @@ const styles = StyleSheet.create({
     },
     loadingOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#000',
         justifyContent: 'center',
         alignItems: 'center',
         gap: 12,
     },
     loadingText: {
         fontSize: 16,
-        color: '#666',
+        color: 'rgba(255,255,255,0.8)',
     },
     errorContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 24,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#000',
     },
     errorText: {
         fontSize: 16,
-        color: '#333',
+        color: 'rgba(255,255,255,0.8)',
         marginBottom: 16,
         textAlign: 'center',
     },
     browserButton: {
-        backgroundColor: '#007AFF',
+        backgroundColor: '#fff',
         paddingHorizontal: 20,
         paddingVertical: 12,
-        borderRadius: 10,
+        borderRadius: 0,
     },
     browserButtonText: {
-        color: '#fff',
+        color: '#000',
         fontSize: 16,
         fontWeight: '600',
     },

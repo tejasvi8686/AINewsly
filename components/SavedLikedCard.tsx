@@ -34,7 +34,7 @@ export default function SavedLikedCard({ item, onPress, onRemove, variant }: Sav
                         <Ionicons
                             name={variant === 'saved' ? 'bookmark' : 'heart'}
                             size={20}
-                            color={variant === 'saved' ? '#007AFF' : '#ff4040'}
+                            color={variant === 'saved' ? '#fff' : '#ff4040'}
                         />
                         <Text style={styles.removeText}>Remove</Text>
                     </Pressable>
@@ -49,14 +49,14 @@ const styles = StyleSheet.create({
     card: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.07)',
-        borderRadius: 14,
+        backgroundColor: 'rgba(255,255,255,0.06)',
+        borderRadius: 12,
         marginHorizontal: 16,
         marginVertical: 6,
         overflow: 'hidden',
         paddingRight: 12,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.06)',
+        borderColor: 'rgba(255,255,255,0.12)',
     },
     image: {
         width: 84,
@@ -75,7 +75,9 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     sourceTag: {
-        backgroundColor: 'rgba(0,122,255,0.9)',
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.4)',
         paddingHorizontal: 8,
         paddingVertical: 3,
         borderRadius: 6,
