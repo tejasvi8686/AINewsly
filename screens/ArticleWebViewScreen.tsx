@@ -106,6 +106,11 @@ export default function ArticleWebViewScreen({ url, onClose }: ArticleWebViewScr
                                     allowsBackForwardNavigationGestures={false}
                                     originWhitelist={['https://*', 'http://*']}
                                     userAgent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15"
+                                    // Android: allow mixed content and single window
+                                    {...(Platform.OS === 'android' && {
+                                        mixedContentMode: 'compatibility' as const,
+                                        setSupportMultipleWindows: false,
+                                    })}
                                     onLoadStart={() => { setLoading(true); setError(false); }}
                                     onLoadEnd={() => setLoading(false)}
                                     onError={() => { setLoading(false); setError(true); }}
