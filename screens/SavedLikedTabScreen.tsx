@@ -7,6 +7,7 @@ import {
     Dimensions,
     Pressable,
 } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,6 +28,7 @@ interface SavedLikedTabScreenProps {
     onRemoveSaved?: (item: NewsItem) => void;
     onRemoveLiked?: (item: NewsItem) => void;
     hideHeader?: boolean;
+    onBack?: () => void;
 }
 
 export default function SavedLikedTabScreen({
@@ -36,6 +38,7 @@ export default function SavedLikedTabScreen({
     onRemoveSaved,
     onRemoveLiked,
     hideHeader = false,
+    onBack,
 }: SavedLikedTabScreenProps) {
     const [tabIndex, setTabIndex] = useState<TabIndex>(initialTab);
     const [articleUrl, setArticleUrl] = useState<string | null>(null);
@@ -51,11 +54,16 @@ export default function SavedLikedTabScreen({
         setTabIndex(initialTab);
     }, [initialTab]);
 
+    const topPadding = hideHeader ? 16 : 0;
+
     const renderLikedList = () => (
         <FlatList
             data={liked}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={liked.length === 0 ? styles.emptyContainer : styles.list}
+            contentContainerStyle={[
+                liked.length === 0 ? styles.emptyContainer : styles.list,
+                hideHeader && { paddingTop: topPadding },
+            ]}
             ListHeaderComponent={
                 liked.length > 0 ? (
                     <Text style={styles.sectionTitle}>Liked articles</Text>
@@ -63,17 +71,20 @@ export default function SavedLikedTabScreen({
             }
             ListEmptyComponent={
                 <View style={styles.empty}>
-                    <Text style={styles.emptyTitle}>No liked articles</Text>
-                    <Text style={styles.emptySub}>Like articles from the feed to see them here.</Text>
+                    <Ionicons name="heart-outline" size={48} color="rgba(255,255,255,0.3)" style={{ marginBottom: 12 }} />
+                    <Text style={styles.emptyTitle}>No liked articles yet</Text>
+                    <Text style={styles.emptySub}>Tap the heart on any article in the feed to save it here.</Text>
                 </View>
             }
-            renderItem={({ item }) => (
-                <SavedLikedCard
-                    item={item}
-                    variant="liked"
-                    onPress={() => setArticleUrl(item.url)}
-                    onRemove={() => toggleLike(item)}
-                />
+            renderItem={({ item, index }) => (
+                <Animated.View entering={FadeIn.delay(index * 50).duration(300)}>
+                    <SavedLikedCard
+                        item={item}
+                        variant="liked"
+                        onPress={() => setArticleUrl(item.url)}
+                        onRemove={() => toggleLike(item)}
+                    />
+                </Animated.View>
             )}
         />
     );
@@ -82,7 +93,10 @@ export default function SavedLikedTabScreen({
         <FlatList
             data={saved}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={saved.length === 0 ? styles.emptyContainer : styles.list}
+            contentContainerStyle={[
+                saved.length === 0 ? styles.emptyContainer : styles.list,
+                hideHeader && { paddingTop: topPadding },
+            ]}
             ListHeaderComponent={
                 saved.length > 0 ? (
                     <Text style={styles.sectionTitle}>Saved articles</Text>
@@ -90,17 +104,20 @@ export default function SavedLikedTabScreen({
             }
             ListEmptyComponent={
                 <View style={styles.empty}>
-                    <Text style={styles.emptyTitle}>No saved articles</Text>
-                    <Text style={styles.emptySub}>Save articles from the feed to see them here.</Text>
+                    <Ionicons name="bookmark-outline" size={48} color="rgba(255,255,255,0.3)" style={{ marginBottom: 12 }} />
+                    <Text style={styles.emptyTitle}>No saved articles yet</Text>
+                    <Text style={styles.emptySub}>Tap the bookmark on any article in the feed to save it for later.</Text>
                 </View>
             }
-            renderItem={({ item }) => (
-                <SavedLikedCard
-                    item={item}
-                    variant="saved"
-                    onPress={() => setArticleUrl(item.url)}
-                    onRemove={() => toggleSave(item)}
-                />
+            renderItem={({ item, index }) => (
+                <Animated.View entering={FadeIn.delay(index * 50).duration(300)}>
+                    <SavedLikedCard
+                        item={item}
+                        variant="saved"
+                        onPress={() => setArticleUrl(item.url)}
+                        onRemove={() => toggleSave(item)}
+                    />
+                </Animated.View>
             )}
         />
     );
@@ -108,7 +125,35 @@ export default function SavedLikedTabScreen({
     return (
         <View style={styles.container}>
             <StatusBar style="light" />
-            <ArticleWebViewScreen url={articleUrl} onClose={() => setArticleUrl(null)} />
+            <ArticleWebViewScreen
+                url={articleUrl}
+                onClose={() => setArticleUrl(null)}
+                relatedArticles={(() => {
+                    if (!articleUrl) return [];
+                    const all = [...saved, ...liked];
+                    const current = all.find((x) => x.url === articleUrl);
+                    return current ? all.filter((n) => n.id !== current.id && n.source === current.source).slice(0, 3) : [];
+                })()}
+                onOpenRelated={(url) => setArticleUrl(url)}
+                articleTitle={(() => {
+                    if (!articleUrl) return undefined;
+                    const all = [...saved, ...liked];
+                    return all.find((x) => x.url === articleUrl)?.title;
+                })()}
+            />
+            {hideHeader && onBack && (
+            <SafeAreaView edges={['top']} style={styles.headerWrapper}>
+                <View style={styles.backHeader}>
+                    <Pressable onPress={onBack} style={styles.backButton} hitSlop={12}>
+                        <Ionicons name="arrow-back" size={24} color="#fff" />
+                        <Text style={styles.backText}>Feed</Text>
+                    </Pressable>
+                    <Text style={styles.backHeaderTitle}>
+                        {tabIndex === 0 ? 'Liked' : 'Saved'}
+                    </Text>
+                </View>
+            </SafeAreaView>
+            )}
             {!hideHeader && (
             <SafeAreaView edges={['top']} style={styles.tabWrapper}>
                 <View style={styles.tabBar}>
@@ -152,6 +197,35 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#000',
+    },
+    headerWrapper: {
+        backgroundColor: '#000',
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255,255,255,0.12)',
+    },
+    backHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+    },
+    backButton: {
+        position: 'absolute',
+        left: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    backText: {
+        fontSize: 17,
+        color: '#fff',
+        fontWeight: '500',
+    },
+    backHeaderTitle: {
+        fontSize: 18,
+        color: '#fff',
+        fontWeight: '600',
     },
     tabWrapper: {
         backgroundColor: '#000',

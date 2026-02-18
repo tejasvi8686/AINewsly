@@ -10,10 +10,14 @@ import {
     ActivityIndicator,
     Linking,
     Platform,
+    ScrollView,
+    Share,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
+import { NewsItem } from '../types';
+import SavedLikedCard from '../components/SavedLikedCard';
 
 const { height } = Dimensions.get('window');
 const WEBVIEW_HEIGHT = height - 100;
@@ -21,9 +25,12 @@ const WEBVIEW_HEIGHT = height - 100;
 interface ArticleWebViewScreenProps {
     url: string | null;
     onClose: () => void;
+    relatedArticles?: NewsItem[];
+    onOpenRelated?: (url: string) => void;
+    articleTitle?: string;
 }
 
-export default function ArticleWebViewScreen({ url, onClose }: ArticleWebViewScreenProps) {
+export default function ArticleWebViewScreen({ url, onClose, relatedArticles = [], onOpenRelated, articleTitle }: ArticleWebViewScreenProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     // On iOS, WKWebView inside Modal often stays white until mounted after modal is shown
@@ -51,6 +58,17 @@ export default function ArticleWebViewScreen({ url, onClose }: ArticleWebViewScr
         }
     };
 
+    const handleShare = async () => {
+        if (!url) return;
+        try {
+            await Share.share({
+                message: `Check out this news: ${articleTitle || 'Article'} - ${url}`,
+            });
+        } catch {
+            // Share cancelled or failed
+        }
+    };
+
     return (
         <Modal
             visible={!!url}
@@ -69,9 +87,13 @@ export default function ArticleWebViewScreen({ url, onClose }: ArticleWebViewScr
                                 <Ionicons name="close" size={28} color="#fff" />
                                 <Text style={styles.closeText}>Close</Text>
                             </Pressable>
+                            <Pressable onPress={handleShare} style={styles.shareButton} hitSlop={12}>
+                                <Ionicons name="share-outline" size={22} color="#fff" />
+                            </Pressable>
                         </View>
                     </SafeAreaView>
 
+                    <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                     <View style={[styles.webviewContainer, { height: WEBVIEW_HEIGHT }]} collapsable={false}>
                         {error ? (
                             <View style={styles.errorContainer}>
@@ -124,6 +146,22 @@ export default function ArticleWebViewScreen({ url, onClose }: ArticleWebViewScr
                             </>
                         )}
                     </View>
+
+                    {relatedArticles.length > 0 && onOpenRelated && (
+                        <View style={styles.relatedSection}>
+                            <Text style={styles.relatedTitle}>Related</Text>
+                            {relatedArticles.slice(0, 3).map((item) => (
+                                <SavedLikedCard
+                                    key={item.id}
+                                    item={item}
+                                    variant="saved"
+                                    onPress={() => onOpenRelated(item.url)}
+                                    onRemove={undefined}
+                                />
+                            ))}
+                        </View>
+                    )}
+                    </ScrollView>
                 </View>
             </SafeAreaProvider>
         </Modal>
@@ -156,6 +194,9 @@ const styles = StyleSheet.create({
         fontSize: 17,
         color: '#fff',
         fontWeight: '500',
+    },
+    shareButton: {
+        padding: 8,
     },
     openBrowserButton: {
         flexDirection: 'row',
@@ -209,5 +250,22 @@ const styles = StyleSheet.create({
         color: '#000',
         fontSize: 16,
         fontWeight: '600',
+    },
+    scrollContainer: {
+        flex: 1,
+        backgroundColor: '#000',
+    },
+    relatedSection: {
+        paddingVertical: 16,
+        paddingHorizontal: 0,
+        backgroundColor: '#000',
+    },
+    relatedTitle: {
+        color: 'rgba(255,255,255,0.7)',
+        fontSize: 12,
+        fontWeight: '600',
+        letterSpacing: 1,
+        marginHorizontal: 16,
+        marginBottom: 12,
     },
 });

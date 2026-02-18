@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 
 interface SettingsRowProps {
     icon?: string;
@@ -50,7 +51,7 @@ export function SettingsRow({
     if (onPress && !rightElement) {
         return (
             <Pressable
-                onPress={onPress}
+                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onPress(); }}
                 style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
             >
                 {content}
@@ -82,7 +83,7 @@ export function SettingsRowSwitch({
                 </View>
                 <Switch
                     value={value}
-                    onValueChange={onValueChange}
+                    onValueChange={(v) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onValueChange(v); }}
                     trackColor={{ false: 'rgba(255,255,255,0.2)', true: 'rgba(255,255,255,0.4)' }}
                     thumbColor={value ? '#fff' : 'rgba(255,255,255,0.5)'}
                     ios_backgroundColor="rgba(255,255,255,0.2)"

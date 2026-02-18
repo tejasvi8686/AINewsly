@@ -6,6 +6,7 @@ import {
     Pressable,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
@@ -22,14 +23,17 @@ import Animated, {
 
 import NewsFeedScreen from './NewsFeedScreen';
 import SettingsScreen from './SettingsScreen';
+import SavedLikedTabScreen from './SavedLikedTabScreen';
 import { useSavedNews } from '../hooks/useSavedNews';
 import { useLikedNews } from '../hooks/useLikedNews';
 
 const { width } = Dimensions.get('window');
 
-// Order: Feed (0) | Settings (1)
+// Order: Feed (0) | Liked (1) | Saved (2) | Settings (3)
 const PAGES = [
     { key: 'feed', icon: 'flash' as const, label: 'Feed' },
+    { key: 'liked', icon: 'heart' as const, label: 'Liked' },
+    { key: 'saved', icon: 'bookmark' as const, label: 'Saved' },
     { key: 'settings', icon: 'settings-outline' as const, label: 'Settings' },
 ];
 
@@ -62,6 +66,7 @@ export default function MainTabScreen({ onLogout, isAuthenticated = false, isGue
     });
 
     const handleTabPress = (index: number) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         listRef.current?.scrollToIndex({ index, animated: true });
     };
 
@@ -78,6 +83,36 @@ export default function MainTabScreen({ onLogout, isAuthenticated = false, isGue
                 </View>
             );
         }
+        if (item.key === 'liked') {
+            return (
+                <View style={styles.page}>
+                    <SavedLikedTabScreen
+                        initialTab={0}
+                        saved={saved}
+                        liked={liked}
+                        onRemoveSaved={toggleSave}
+                        onRemoveLiked={toggleLike}
+                        hideHeader
+                        onBack={() => handleTabPress(0)}
+                    />
+                </View>
+            );
+        }
+        if (item.key === 'saved') {
+            return (
+                <View style={styles.page}>
+                    <SavedLikedTabScreen
+                        initialTab={1}
+                        saved={saved}
+                        liked={liked}
+                        onRemoveSaved={toggleSave}
+                        onRemoveLiked={toggleLike}
+                        hideHeader
+                        onBack={() => handleTabPress(0)}
+                    />
+                </View>
+            );
+        }
         if (item.key === 'settings') {
             return (
                 <View style={styles.page}>
@@ -89,6 +124,7 @@ export default function MainTabScreen({ onLogout, isAuthenticated = false, isGue
                         onLogout={onLogout}
                         isAuthenticated={isAuthenticated}
                         isGuest={isGuest}
+                        onBack={() => handleTabPress(0)}
                     />
                 </View>
             );
@@ -219,7 +255,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(20, 20, 20, 0.85)', // Semi-transparent dark
         borderRadius: 40,
         height: 64,
-        width: 160,
+        width: 280,
         alignItems: 'center',
         justifyContent: 'space-evenly',
         paddingHorizontal: 10,
@@ -235,7 +271,7 @@ const styles = StyleSheet.create({
         elevation: 10,
     },
     tab: {
-        width: 60,
+        width: 56,
         height: 60,
         alignItems: 'center',
         justifyContent: 'center',

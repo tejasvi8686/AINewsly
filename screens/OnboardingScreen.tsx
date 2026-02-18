@@ -67,7 +67,7 @@ const SLIDES = [
         title: 'MASTER THE FEED',
         subtitle: 'Gestures',
         icon: 'finger-print' as const, // Placeholder
-        description: 'Swipe Right to Save. Swipe Left to Like. It’s that simple.',
+        description: 'Tap the bookmark to save, heart to like. Swipe up for the next story.',
         color: '#000000', // Deep Black
     },
 ];

@@ -21,8 +21,8 @@ const SuccessToast = (props: BaseToastProps) => {
       {...props}
       style={[styles.toastCard, { top: -top, backgroundColor: "#16C47F" }]}
       contentContainerStyle={[styles.toastContent, { paddingTop: top + 40 }]}
+      text1Style={styles.toastText}
       text2Style={styles.toastText}
-      text1={undefined} // Hide text1 if not used in this style
     />
   );
 };
@@ -34,8 +34,8 @@ const ErrorToastComponent = (props: ToastProps) => {
       {...props}
       style={[styles.toastCard, { top: -top, backgroundColor: "#FF4F4F" }]}
       contentContainerStyle={[styles.toastContent, { paddingTop: top + 40 }]}
+      text1Style={styles.toastText2}
       text2Style={styles.toastText2}
-      text1={undefined}
     />
   );
 };

@@ -25,6 +25,7 @@ interface SettingsScreenProps {
     onLogout?: () => void;
     isGuest?: boolean;
     isAuthenticated?: boolean;
+    onBack?: () => void;
 }
 
 const APP_VERSION = '1.0.0';
@@ -39,6 +40,7 @@ export default function SettingsScreen({
     onLogout,
     isGuest = true,
     isAuthenticated = false,
+    onBack,
 }: SettingsScreenProps) {
     const [viewMode, setViewMode] = useState<ViewMode>('main');
     const { notificationsEnabled, setNotificationsEnabled } = useSettings();
@@ -103,6 +105,12 @@ export default function SettingsScreen({
             <StatusBar barStyle="light-content" />
             <SafeAreaView edges={['top']} style={styles.headerWrapper}>
                 <View style={styles.header}>
+                    {onBack && (
+                        <Pressable onPress={onBack} style={styles.backButton} hitSlop={12}>
+                            <Ionicons name="arrow-back" size={24} color="#fff" />
+                            <Text style={styles.backText}>Feed</Text>
+                        </Pressable>
+                    )}
                     <Text style={styles.headerTitle}>Settings</Text>
                 </View>
             </SafeAreaView>
