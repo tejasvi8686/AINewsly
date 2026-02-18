@@ -6,8 +6,18 @@ import GetStartedScreen from './screens/GetStartedScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import MainTabScreen from './screens/MainTabScreen';
 import AuthScreen from './screens/AuthScreen';
-
 import { toastConfig } from './utils/toastConfig';
+
+function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SafeAreaProvider>
+      <View style={styles.container}>
+        {children}
+        <Toast config={toastConfig} />
+      </View>
+    </SafeAreaProvider>
+  );
+}
 
 export default function App() {
   const [hasSeenGetStarted, setHasSeenGetStarted] = useState(false);
@@ -15,66 +25,50 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
 
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setIsGuest(false);
+  };
 
-  // If logged in, go straight to app
   if (isAuthenticated) {
     return (
-      <SafeAreaProvider>
-        <View style={styles.container}>
-          <MainTabScreen />
-          <Toast config={toastConfig} />
-        </View>
-      </SafeAreaProvider>
+      <AppLayout>
+        <MainTabScreen onLogout={handleLogout} isAuthenticated isGuest={false} />
+      </AppLayout>
     );
   }
 
-  // If guest mode (skipped auth), go to app
   if (isGuest) {
     return (
-      <SafeAreaProvider>
-        <View style={styles.container}>
-          <MainTabScreen />
-    <Toast config={toastConfig} />
-        </View>
-      </SafeAreaProvider>
+      <AppLayout>
+        <MainTabScreen onLogout={handleLogout} isAuthenticated={false} isGuest />
+      </AppLayout>
     );
   }
 
-  // If hasn't seen get started, show it
   if (!hasSeenGetStarted) {
     return (
-      <SafeAreaProvider>
-        <View style={styles.container}>
-          <GetStartedScreen onGetStarted={() => setHasSeenGetStarted(true)} />
-          <Toast config={toastConfig} />
-        </View>
-      </SafeAreaProvider>
+      <AppLayout>
+        <GetStartedScreen onGetStarted={() => setHasSeenGetStarted(true)} />
+      </AppLayout>
     );
   }
 
-  // If hasn't seen onboarding, show it
   if (!hasSeenOnboarding) {
     return (
-      <SafeAreaProvider>
-        <View style={styles.container}>
-          <OnboardingScreen onComplete={() => setHasSeenOnboarding(true)} />
-          <Toast config={toastConfig} />
-        </View>
-      </SafeAreaProvider>
+      <AppLayout>
+        <OnboardingScreen onComplete={() => setHasSeenOnboarding(true)} />
+      </AppLayout>
     );
   }
 
-  // Otherwise show auth screen
   return (
-    <SafeAreaProvider>
-      <View style={styles.container}>
-        <AuthScreen 
-          onSuccess={() => setIsAuthenticated(true)} 
-          onSkip={() => setIsGuest(true)}
-        />
-        <Toast config={toastConfig} />
-      </View>
-    </SafeAreaProvider>
+    <AppLayout>
+      <AuthScreen
+        onSuccess={() => setIsAuthenticated(true)}
+        onSkip={() => setIsGuest(true)}
+      />
+    </AppLayout>
   );
 }
 

@@ -4,7 +4,6 @@ import {
     StyleSheet,
     Dimensions,
     Pressable,
-    Platform,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,24 +21,29 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import NewsFeedScreen from './NewsFeedScreen';
-import SavedLikedTabScreen from './SavedLikedTabScreen';
+import SettingsScreen from './SettingsScreen';
 import { useSavedNews } from '../hooks/useSavedNews';
 import { useLikedNews } from '../hooks/useLikedNews';
 
 const { width } = Dimensions.get('window');
 
-// Order: Liked tab (left, index 0) | Feed (center, index 1) | Saved tab (right, index 2)
+// Order: Feed (0) | Settings (1)
 const PAGES = [
-    { key: 'liked', icon: 'heart' as const, label: 'Liked', initialTab: 0 as const },
     { key: 'feed', icon: 'flash' as const, label: 'Feed' },
-    { key: 'saved', icon: 'bookmark' as const, label: 'Saved', initialTab: 1 as const },
+    { key: 'settings', icon: 'settings-outline' as const, label: 'Settings' },
 ];
 
-const INITIAL_INDEX = 1; // Feed
+const INITIAL_INDEX = 0; // Feed
 
 const AnimatedIcon = Animated.createAnimatedComponent(Ionicons);
 
-export default function MainTabScreen() {
+interface MainTabScreenProps {
+    onLogout?: () => void;
+    isAuthenticated?: boolean;
+    isGuest?: boolean;
+}
+
+export default function MainTabScreen({ onLogout, isAuthenticated = false, isGuest = true }: MainTabScreenProps) {
     const listRef = useRef<Animated.FlatList<any>>(null);
     const scrollX = useSharedValue(INITIAL_INDEX * width);
     const [activeIndex, setActiveIndex] = useState(INITIAL_INDEX);
@@ -74,24 +78,28 @@ export default function MainTabScreen() {
                 </View>
             );
         }
-        const initialTab = item.key === 'saved' ? 1 : 0;
-        return (
-            <View style={styles.page}>
-                <SavedLikedTabScreen
-                    initialTab={initialTab}
-                    saved={saved}
-                    liked={liked}
-                    onRemoveSaved={toggleSave}
-                    onRemoveLiked={toggleLike}
-                />
-            </View>
-        );
+        if (item.key === 'settings') {
+            return (
+                <View style={styles.page}>
+                    <SettingsScreen
+                        saved={saved}
+                        liked={liked}
+                        onRemoveSaved={toggleSave}
+                        onRemoveLiked={toggleLike}
+                        onLogout={onLogout}
+                        isAuthenticated={isAuthenticated}
+                        isGuest={isGuest}
+                    />
+                </View>
+            );
+        }
+        return null;
     };
 
     return (
         <View style={styles.container}>
             <StatusBar style="light" />
-            
+
             <Animated.FlatList
                 ref={listRef}
                 data={PAGES}
@@ -211,7 +219,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(20, 20, 20, 0.85)', // Semi-transparent dark
         borderRadius: 40,
         height: 64,
-        width: 220,
+        width: 160,
         alignItems: 'center',
         justifyContent: 'space-evenly',
         paddingHorizontal: 10,

@@ -26,6 +26,7 @@ interface SavedLikedTabScreenProps {
     liked?: NewsItem[];
     onRemoveSaved?: (item: NewsItem) => void;
     onRemoveLiked?: (item: NewsItem) => void;
+    hideHeader?: boolean;
 }
 
 export default function SavedLikedTabScreen({
@@ -34,6 +35,7 @@ export default function SavedLikedTabScreen({
     liked: likedProp,
     onRemoveSaved,
     onRemoveLiked,
+    hideHeader = false,
 }: SavedLikedTabScreenProps) {
     const [tabIndex, setTabIndex] = useState<TabIndex>(initialTab);
     const [articleUrl, setArticleUrl] = useState<string | null>(null);
@@ -107,6 +109,7 @@ export default function SavedLikedTabScreen({
         <View style={styles.container}>
             <StatusBar style="light" />
             <ArticleWebViewScreen url={articleUrl} onClose={() => setArticleUrl(null)} />
+            {!hideHeader && (
             <SafeAreaView edges={['top']} style={styles.tabWrapper}>
                 <View style={styles.tabBar}>
                     <Pressable
@@ -137,6 +140,7 @@ export default function SavedLikedTabScreen({
                     </Pressable>
                 </View>
             </SafeAreaView>
+            )}
             <View style={styles.content}>
                 {tabIndex === 0 ? renderLikedList() : renderSavedList()}
             </View>

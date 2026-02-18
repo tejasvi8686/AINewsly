@@ -38,19 +38,19 @@ export default function NewsCard({ item, isActive, isSaved = false, onSave, isLi
         if (isActive && !item.summary && !summary) {
             setLoadingSummary(true);
             summarizeNews(item.description || item.title)
-                .then(res => setSummary(res))
-                .catch(err => console.error(err))
+                .then(setSummary)
+                .catch(() => {})
                 .finally(() => setLoadingSummary(false));
         }
-    }, [isActive, item, summary]);
+    }, [isActive, item.id, item.summary, item.description, item.title, summary]);
 
     const handleShare = async () => {
         try {
             await Share.share({
                 message: `Check out this news: ${item.title} - ${item.url}`,
             });
-        } catch (error) {
-            console.log(error);
+        } catch {
+            // Share cancelled or failed - no user feedback needed
         }
     };
 
