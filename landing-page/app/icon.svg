@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <rect width="32" height="32" rx="8" fill="white"/>
+  <!-- Newspaper/document shape (like Lucide Newspaper) -->
+  <path d="M8 8h12v16H8V8z" fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12 12h6M12 16h6" stroke="black" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Folded corner -->
+  <path d="M20 8v6h-6" fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Sparkle accent -->
+  <circle cx="24" cy="10" r="1.5" fill="black"/>
+</svg>
