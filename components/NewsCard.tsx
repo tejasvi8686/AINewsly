@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
     View,
     Text,
@@ -18,10 +18,8 @@ import Animated, {
     Easing,
     runOnJS,
 } from 'react-native-reanimated';
-import SkeletonLine from './SkeletonLine';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NewsItem } from '../types';
-import { summarizeNews } from '../services/newsService';
 import { formatDistanceToNow } from 'date-fns';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -29,7 +27,7 @@ const { width, height } = Dimensions.get('window');
 
 interface NewsCardProps {
     item: NewsItem;
-    isActive: boolean; // to trigger summary only when active
+    isActive: boolean; // true while this card is on screen
     isSaved?: boolean;
     onSave?: (item: NewsItem) => void;
     isLiked?: boolean;
@@ -37,9 +35,7 @@ interface NewsCardProps {
     onOpenLink?: (url: string) => void;
 }
 
-export default function NewsCard({ item, isActive, isSaved = false, onSave, isLiked = false, onLike, onOpenLink }: NewsCardProps) {
-    const [summary, setSummary] = useState<string | null>(null);
-    const [loadingSummary, setLoadingSummary] = useState(false);
+export default function NewsCard({ item, isSaved = false, onSave, isLiked = false, onLike, onOpenLink }: NewsCardProps) {
     const bounceY = useSharedValue(0);
 
     useEffect(() => {
@@ -56,16 +52,6 @@ export default function NewsCard({ item, isActive, isSaved = false, onSave, isLi
     const swipeHintAnimatedStyle = useAnimatedStyle(() => ({
         transform: [{ translateY: bounceY.value }],
     }));
-
-    useEffect(() => {
-        if (isActive && !item.summary && !summary) {
-            setLoadingSummary(true);
-            summarizeNews(item.description || item.title)
-                .then(setSummary)
-                .catch(() => {})
-                .finally(() => setLoadingSummary(false));
-        }
-    }, [isActive, item.id, item.summary, item.description, item.title, summary]);
 
     const getReadTime = (text: string) => Math.max(1, Math.ceil((text?.length ?? 0) / 200));
 
@@ -179,23 +165,15 @@ export default function NewsCard({ item, isActive, isSaved = false, onSave, isLi
                 <Text style={styles.title} numberOfLines={3}>{item.title}</Text>
 
                 <View style={styles.summaryContainer}>
-                    {/* AI Summary */}
+                    {/* AI summary from the server. If there isn't one, show the article text as a preview. */}
                     <View style={[styles.summaryBlock, styles.summaryBlockPurple]}>
                     <View style={styles.summaryLabelRow}>
-                        <Ionicons name="sparkles" size={13} color="#c084fc" />
-                        <Text style={[styles.summaryLabel, { color: '#c084fc' }]}>AI Summary</Text>
+                        <Ionicons name={item.summary ? 'sparkles' : 'newspaper-outline'} size={13} color="#c084fc" />
+                        <Text style={[styles.summaryLabel, { color: '#c084fc' }]}>{item.summary ? 'AI Summary' : 'Preview'}</Text>
                     </View>
-                    {loadingSummary ? (
-                        <View style={styles.skeletonSummary}>
-                            <SkeletonLine width="100%" height={14} />
-                            <SkeletonLine width="95%" height={14} style={{ marginTop: 8 }} />
-                            <SkeletonLine width="70%" height={14} style={{ marginTop: 8 }} />
-                        </View>
-                    ) : (
-                        <Text style={styles.description} numberOfLines={item.whyItMatters ? 4 : 6}>
-                            {item.summary || summary || item.description}
-                        </Text>
-                    )}
+                    <Text style={styles.description} numberOfLines={item.whyItMatters ? 4 : 6}>
+                        {item.summary || item.description || item.title}
+                    </Text>
                     </View>
 
                     {/* Why It Matters (New Section) */}
@@ -329,9 +307,6 @@ const styles = StyleSheet.create({
     summaryBlockYellow: {
         borderLeftColor: 'rgba(251,191,36,0.5)',
         marginTop: 4,
-    },
-    skeletonSummary: {
-        marginTop: 6,
     },
     summaryLabelRow: {
         flexDirection: 'row',
